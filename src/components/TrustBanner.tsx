@@ -36,7 +36,7 @@ export default function TrustBanner() {
                                     alt={client.name}
                                     width={140}
                                     height={60}
-                                    className="max-h-[50px] w-auto object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+                                    className="max-h-[50px] w-auto object-contain transition-all duration-300"
                                 />
                             </div>
                         ))}
