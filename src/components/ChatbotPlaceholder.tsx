@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Phone, FileText, HelpCircle, ArrowRight, Bot } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { MessageCircle, X, Send, Phone, FileText, HelpCircle, ArrowRight, Bot, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateResponse, ConversationContext, type ChatLink } from './chatbot-engine';
 
 interface Message {
     id: number;
     text: string;
     sender: 'bot' | 'user';
     timestamp: Date;
+    links?: ChatLink[];
 }
 
 const quickActions = [
@@ -17,23 +19,12 @@ const quickActions = [
     { label: 'Call Us Now', icon: Phone, action: 'call' },
 ];
 
-const botResponses: Record<string, string> = {
-    quote:
-        "Great choice! You can request a free, no-obligation quote by visiting our Contact page, or call us directly at 1300 796 987. We'll tailor a cleaning solution to your specific needs.",
-    services:
-        "We offer 7 specialised cleaning services:\n\n• Commercial Cleaning\n• Healthcare Cleaning\n• Industrial Cleaning\n• Education Cleaning\n• GMP Cleaning\n• Transport Cleaning\n• Specialized Cleaning\n\nVisit our Services page to learn more about each one!",
-    call:
-        "You can reach us at 1300 796 987 during business hours (Mon–Fri, 7am–6pm). We'd love to chat about how we can help!",
-    default:
-        "Thanks for your message! For the fastest response, please call us at 1300 796 987 or submit a quote request on our Contact page. Our team typically responds within 2 business hours.",
-};
-
 export default function ChatbotPlaceholder() {
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: 1,
-            text: "👋 Hi there! I'm the Auzclean assistant. How can I help you today?",
+            text: "👋 Hi there! I'm the Auzclean assistant. Ask me anything about our cleaning services, get a quote, or just have a chat. How can I help you today?",
             sender: 'bot',
             timestamp: new Date(),
         },
@@ -42,6 +33,7 @@ export default function ChatbotPlaceholder() {
     const [typing, setTyping] = useState(false);
     const [hasUnread, setHasUnread] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const context = useMemo(() => new ConversationContext(), []);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,7 +43,6 @@ export default function ChatbotPlaceholder() {
         scrollToBottom();
     }, [messages, typing]);
 
-    // Show unread dot after 4 seconds if chat hasn't been opened
     useEffect(() => {
         const timer = setTimeout(() => {
             if (!open) setHasUnread(true);
@@ -59,16 +50,22 @@ export default function ChatbotPlaceholder() {
         return () => clearTimeout(timer);
     }, [open]);
 
-    const addBotMessage = (text: string) => {
+    const addBotMessage = useCallback((text: string, links?: ChatLink[]) => {
         setTyping(true);
+        const delay = Math.min(500 + text.length * 1.5, 1600);
         setTimeout(() => {
             setMessages((prev) => [
                 ...prev,
-                { id: Date.now(), text, sender: 'bot', timestamp: new Date() },
+                { id: Date.now(), text, sender: 'bot', timestamp: new Date(), links },
             ]);
             setTyping(false);
-        }, 800 + Math.random() * 600);
-    };
+        }, delay);
+    }, []);
+
+    const processMessage = useCallback((userText: string) => {
+        const { text, links } = generateResponse(userText, context);
+        addBotMessage(text, links);
+    }, [addBotMessage, context]);
 
     const handleQuickAction = (action: string) => {
         if (action === 'call') {
@@ -77,25 +74,26 @@ export default function ChatbotPlaceholder() {
         }
 
         const userMsg =
-            action === 'quote' ? "I'd like to get a free quote" : "Tell me about your services";
+            action === 'quote' ? "I'd like to get a free quote" : 'What services do you offer?';
 
         setMessages((prev) => [
             ...prev,
             { id: Date.now(), text: userMsg, sender: 'user', timestamp: new Date() },
         ]);
 
-        addBotMessage(botResponses[action] || botResponses.default);
+        processMessage(userMsg);
     };
 
     const handleSend = () => {
         if (!input.trim()) return;
 
+        const userText = input.trim();
         setMessages((prev) => [
             ...prev,
-            { id: Date.now(), text: input.trim(), sender: 'user', timestamp: new Date() },
+            { id: Date.now(), text: userText, sender: 'user', timestamp: new Date() },
         ]);
         setInput('');
-        addBotMessage(botResponses.default);
+        processMessage(userText);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -119,8 +117,8 @@ export default function ChatbotPlaceholder() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="bg-white rounded-2xl shadow-2xl shadow-navy/20 border border-slate-200 w-[360px] mb-4 overflow-hidden flex flex-col"
-                        style={{ maxHeight: 'min(520px, calc(100vh - 120px))' }}
+                        className="bg-white rounded-2xl shadow-2xl shadow-navy/20 border border-slate-200 w-[380px] mb-4 overflow-hidden flex flex-col"
+                        style={{ maxHeight: 'min(560px, calc(100vh - 120px))' }}
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-navy to-royal p-4 flex items-center justify-between shrink-0">
@@ -129,12 +127,13 @@ export default function ChatbotPlaceholder() {
                                     <Bot size={18} className="text-white" />
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-white">
+                                    <div className="text-sm font-semibold text-white flex items-center gap-1.5">
                                         Auzclean Assistant
+                                        <Sparkles size={12} className="text-cyan" />
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                                        <span className="text-[11px] text-white/60">Online</span>
+                                        <span className="text-[11px] text-white/60">Online • Ask me anything</span>
                                     </div>
                                 </div>
                             </div>
@@ -154,18 +153,33 @@ export default function ChatbotPlaceholder() {
                                     key={msg.id}
                                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div
-                                        className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed whitespace-pre-line ${msg.sender === 'user'
+                                    <div className={msg.sender === 'user' ? 'max-w-[85%]' : 'max-w-[90%]'}>
+                                        <div
+                                            className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-line ${msg.sender === 'user'
                                                 ? 'bg-royal text-white rounded-2xl rounded-br-md'
                                                 : 'bg-white text-slate-700 rounded-2xl rounded-bl-md border border-slate-100 shadow-sm'
-                                            }`}
-                                    >
-                                        {msg.text}
+                                                }`}
+                                        >
+                                            {msg.text}
+                                        </div>
+                                        {msg.links && msg.links.length > 0 && msg.sender === 'bot' && (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {msg.links.map((link) => (
+                                                    <a
+                                                        key={link.href}
+                                                        href={link.href}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-royal bg-royal/5 hover:bg-royal/10 border border-royal/20 rounded-full transition-colors"
+                                                    >
+                                                        {link.label}
+                                                        <ArrowRight size={10} />
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
 
-                            {/* Typing indicator */}
                             {typing && (
                                 <div className="flex justify-start">
                                     <div className="bg-white rounded-2xl rounded-bl-md border border-slate-100 shadow-sm px-4 py-3 flex items-center gap-1.5">
@@ -179,7 +193,6 @@ export default function ChatbotPlaceholder() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Quick Actions (only show if few messages) */}
                         {messages.length <= 2 && (
                             <div className="px-4 py-3 bg-white border-t border-slate-100 space-y-2 shrink-0">
                                 {quickActions.map((action) => (
@@ -207,7 +220,7 @@ export default function ChatbotPlaceholder() {
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Type a message..."
+                                    placeholder="Ask me anything..."
                                     className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
                                 />
                                 <button
@@ -220,14 +233,13 @@ export default function ChatbotPlaceholder() {
                                 </button>
                             </div>
                             <p className="text-[10px] text-slate-400 text-center mt-2">
-                                AI-powered assistant • Responses are pre-configured
+                                Auzclean AI Assistant • Smart NLP Engine
                             </p>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Toggle button */}
             <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -247,7 +259,6 @@ export default function ChatbotPlaceholder() {
                     )}
                 </AnimatePresence>
 
-                {/* Unread dot */}
                 {hasUnread && !open && (
                     <motion.span
                         initial={{ scale: 0 }}
