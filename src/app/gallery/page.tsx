@@ -26,6 +26,9 @@ const galleryImages = [
     { src: '/Auzclean gallery /photo_2026-03-09 08.15.24.jpeg', alt: 'Auzclean cleaning project 16' },
     { src: '/Auzclean gallery /photo_2026-03-09 08.15.25.jpeg', alt: 'Auzclean cleaning project 17' },
     { src: '/Auzclean gallery /photo_2026-03-09 08.15.26.jpeg', alt: 'Auzclean cleaning project 18' },
+    { src: '/Auzclean gallery /new1.jpeg', alt: 'Auzclean cleaning project 19' },
+    { src: '/Auzclean gallery /new 2.jpeg', alt: 'Auzclean cleaning project 20' },
+    { src: '/Auzclean gallery /new 3.jpeg', alt: 'Auzclean cleaning project 21' },
 ];
 
 export default function GalleryPage() {
