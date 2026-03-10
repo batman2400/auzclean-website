@@ -35,28 +35,26 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="lg:col-span-1">
                         <Link href="/" className="inline-block mb-6">
-                            <div className="bg-white rounded-xl px-4 py-2 inline-block">
-                                <Image
-                                    src="/images/logo.jpeg"
-                                    alt="Auzclean Services"
-                                    width={180}
-                                    height={54}
-                                    className="h-10 w-auto object-contain"
-                                />
-                            </div>
+                            <Image
+                                src="/images/logo.png"
+                                alt="Auzclean Services"
+                                width={220}
+                                height={66}
+                                className="h-14 w-auto object-contain brightness-0 invert"
+                            />
                         </Link>
                         <p className="text-white/60 text-sm leading-relaxed mb-6">
                             Professional commercial cleaning services driven by technology,
                             sustainability, and an unwavering commitment to excellence.
                         </p>
                         {/* CM3 badge */}
-                        <div className="inline-flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
+                        <div className="inline-flex items-center gap-2 bg-white rounded-lg px-3 py-2">
                             <Image
                                 src="/images/cm3.svg"
                                 alt="CM3 Compliant"
                                 width={60}
                                 height={28}
-                                className="h-7 w-auto brightness-0 invert"
+                                className="h-7 w-auto"
                             />
                             <span className="text-xs text-white/70">Compliant</span>
                         </div>
