@@ -13,6 +13,7 @@ interface FormState {
 }
 
 export default function ContactForm() {
+    const CONTACT_EMAIL = 'info@auzcleanfacility.com.au';
     const [form, setForm] = useState<FormState>({
         name: '',
         email: '',
@@ -39,8 +40,22 @@ export default function ContactForm() {
         e.preventDefault();
         if (!validate()) return;
         setLoading(true);
-        // Simulate submission
-        await new Promise((r) => setTimeout(r, 1500));
+
+        const subject = `New Quote Request - ${form.facilityType}`;
+        const bodyLines = [
+            `Name: ${form.name}`,
+            `Email: ${form.email}`,
+            `Phone: ${form.phone}`,
+            `Facility Type: ${form.facilityType}`,
+            '',
+            'Message:',
+            form.message?.trim() || 'N/A',
+        ];
+        const mailtoLink = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+            bodyLines.join('\n')
+        )}`;
+
+        window.location.href = mailtoLink;
         setLoading(false);
         setSubmitted(true);
     };
@@ -162,6 +177,17 @@ export default function ContactForm() {
 
             <p className="text-xs text-slate-400 text-center">
                 We&apos;ll respond within 24 hours. No spam, ever.
+            </p>
+
+            <p className="text-xs text-slate-500 text-center">
+                Prefer direct email? Write to{' '}
+                <a
+                    href={`mailto:${CONTACT_EMAIL}`}
+                    className="font-medium text-royal hover:underline"
+                >
+                    {CONTACT_EMAIL}
+                </a>
+                .
             </p>
         </form>
     );
